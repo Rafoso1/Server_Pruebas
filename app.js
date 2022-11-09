@@ -26,7 +26,9 @@ app.engine('hbs', handlebars.engine({
 	defaultLayout: 'index'
 }));
 
-// app.use(express.static('src/user/')); probar
+// app.use(express.static(__dirname + /"public")); probar // en public deberan estar los css y las imagenes
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({extended: true}));
 
 // const fakeApi = () => 'One Piece'; // insertar solo 1 valor
 
@@ -35,26 +37,26 @@ const fakeApiArray = () => {
 		{
 			mes: 'Nov',
 			dia: 04,
-			hora: '10:00',
-			anime: 'One Piece',
+			hora: '12:00',
+			anime: 'One Piece'
 		},
 		{
 			mes: 'Nov',
 			dia: 04,
-			hora: '10:00',
-			anime: 'One Piece',
+			hora: '14:00',
+			anime: 'Seven Deadly Sins'
 		},
 		{
 			mes: 'Nov',
 			dia: 04,
-			hora: '10:00',
-			anime: 'One Piece',
+			hora: '16:00',
+			anime: 'Naruto Shippuden'
 		},
 		{
 			mes: 'Nov',
 			dia: 04,
-			hora: '10:00',
-			anime: 'One Piece',
+			hora: '18:00',
+			anime: 'Dragon Ball Z'
 		}
 	]
 }
