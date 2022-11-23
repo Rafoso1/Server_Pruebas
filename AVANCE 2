@@ -1,0 +1,187 @@
+const express = require('express')
+const app = express()
+const port = 3000
+
+app.use(express.json());
+app.use(cookieParser());
+
+// aqui estan las rutas de la api rest que se van a usar en el front end 
+//npm token generator
+
+app.post('/login', (req, res) => {
+  var cliente = {"email":req.body.email,"contra":req.body.contra}
+  //INSERTE AQUI CONSULTA MONGODB - USUARIO EXISTENTE
+  
+  if (database.email == cliente.email && database.password == cliente.contra) {
+      res.json({
+          ok: true, token:
+          jwt.sign({ user: req.body }, 'secret') });
+  } else {
+      res.json({ ok: false });
+  }
+});
+
+
+//va a recibir el parametro id
+app.get('/user/:id', (req, res) => {
+    var id = req.params.id;
+    //recibe un token y retorna los datos del usuario
+    //si el token es correcto
+
+    let token = req.query.token || req.headers['authorization'];
+    if (token) {
+        jwt.verify(token, 'secret',
+            (err, decoded) => {
+                if (err) {
+                    res.json({ ok: false, error: err });
+                } else {
+                    res.json({ ok: true, user: decoded.user });
+                }
+            });
+    } else {
+        res.json({ ok: false, error: 'No token provided.' });
+    }
+});
+
+app.get('/eventos', (req, res) => {
+    //INSERTE FIND/FINDONE MONGODB  
+
+    let token = req.query.token || req.headers['authorization'];
+    if (token) {
+        jwt.verify(token, 'secret',
+            (err, decoded) => {
+                if (err) {
+                    res.json({ ok: false, error: err });
+                } else {
+                    res.json({ 
+                      ok: true, 
+                      "Estado" : "Usuario creado satisfactoriamente",
+                      "Nombre" : cliente.name,
+                      "Apellido" : cliente.lastname,
+                      "Correo" : cliente.email });
+                }
+            });
+    } else {
+        res.json({ ok: false, error: 'No token provided.' });
+    }
+});
+
+app.get('/eventos/:id', (req, res) => {
+    var id = req.params.id;
+    //INSERTE FIND/FINDONE MONGODB  
+    let token = req.query.token || req.headers['authorization'];
+    if (token) {
+        jwt.verify(token, 'secret',
+            (err, decoded) => {
+                if (err) {
+                    res.json({ ok: false, error: err });
+                } else {
+                    let event = events.find(e => e.id == req.params.id);
+                    res.json({ 
+                      ok: true, 
+                    "Estado" : "Usuario creado satisfactoriamente",
+                    "Nombre" : cliente.name,
+                    "Apellido" : cliente.lastname,
+                    "Correo" : cliente.email });
+                }
+            });
+    } else {
+        res.json({ ok: false, error: 'No token provided.' });
+    }
+});
+
+app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
+    var id = req.params.id;
+    var asiento = req.params.asiento;
+    var iduser = req.params.iduser;
+    //INSERTE FIND/FINDONE MONGODB  
+    let token = req.query.token || req.headers['authorization'];
+    if (token) {
+        jwt.verify(token, 'secret',
+            (err, decoded) => {
+                if (err) {
+                    res.json({ 
+                      ok: false, 
+                      "Estado" : "Usuario creado satisfactoriamente",
+                      "Nombre" : cliente.name,
+                      "Apellido" : cliente.lastname,
+                      "Correo" : cliente.email
+                    });
+                } else {
+                    let event = events.find(e => e.id == req.params.id);
+                    let asiento = event.asientos.find(a => a.id == req.params.asiento);
+                    if (asiento.iduser == req.params.iduser) {
+                        asiento.iduser = null;
+                        res.json({ 
+                          ok: true,
+                          "Estado" : "Usuario creado satisfactoriamente",
+                          "Nombre" : cliente.name,
+                          "Apellido" : cliente.lastname,
+                          "Correo" : cliente.email });
+                    } else {
+                        res.json({ ok: false, error: 'El asiento no pertenece al usuario' });
+                    }
+                }
+            });
+    } else {
+        res.json({ ok: false, error: 'No token provided.' });
+    }        
+});
+
+
+// ------------------------------------------------------------------------------------------------------------------
+
+// app.get('/', (req, res) => {
+//     console.log("Persona nueva en sistema")
+//     res.send("Bienvenido")
+//   })
+  
+
+// app.post('/register', (req,res)=>{
+//   var cliente = {"name":req.body.name,"lastname":req.body.lastname,"email":req.body.email,"contra":req.body.contra1}
+//   if(req.body.contra2==cliente.contra){
+//     //INSERTE AQUI CONSULTA MONGODB - USUARIO EXISTENTE
+//     var respuesta=false
+//     if(respuesta){
+//       res.status(200).json({
+//         "Estado" : "Usuario creado satisfactoriamente",
+//         "Nombre" : cliente.name,
+//         "Apellido" : cliente.lastname,
+//         "Correo" : cliente.email
+//       })
+//     }else{
+//       res.status(200).json({
+//         "Estado" : "Correo ya registrado"
+//       })
+//     }
+//   }else{
+//     res.status(200).json({
+//       "Estado" : "Contraseñas no coinciden"
+//     })
+//   }
+// })
+
+// app.get('/login/:correo&&:contra',(req,res) =>{
+//   var correo= req.params.email;
+//   var contra = req.params.contra;
+//   //INSERTE FIND/FINDONE MONGODB  
+//   var resultado=false
+//   if(resultado){
+//     req.cookies.email=correo;
+//     //req.cookies.name=usuario.name;
+    
+//     console.log(req.cookies);
+//     res.status(200).json({
+//       "Estado" : "Logeado con exito",
+//       "Correo": req.cookies.email
+//     })
+//   }else{
+//     res.status(200).json({
+//       "Estado" : "El usuario no existe"
+//     })
+//   }
+// })
+
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`)
+// })
