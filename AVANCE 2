@@ -2,24 +2,52 @@
 const express = require('express')
 const app = express()
 const port = 3000
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-app.use(express.json());
+var cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
-// aqui estan las rutas de la api rest que se van a usar en el front end 
-//npm token generator
+const { MongoClient } = require("mongodb");
+const uri = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000";
+const client = new MongoClient(uri);
+const database = client.db('ticketera');
+const users = database.collection('users');// users tiene: name, pass, email, utilizada para el register y el login
 
-app.post('/login', (req, res) => {
-  var cliente = {"email":req.body.email,"contra":req.body.contra}
-  //INSERTE AQUI CONSULTA MONGODB - USUARIO EXISTENTE
-  
-  if (database.email == cliente.email && database.password == cliente.contra) {
-      res.json({
-          ok: true, token:
-          jwt.sign({ user: req.body }, 'secret') });
-  } else {
-      res.json({ ok: false });
-  }
+const TokenGenerator = require('uuid-token-generator');
+const tokgen = new TokenGenerator(256, TokenGenerator.BASE62);
+var token = tokgen.generate();
+
+// aqui estan las rutas de la api rest que se van a usar en el front end 
+
+
+app.get('/', (req, res) => {
+        console.log("Persona nueva en sistema");
+        res.send("Bienvenido");
+})
+
+app.post('/login', async (req, res) => {
+  const query = { email: req.body.email };
+  const usuario = await users.findOne(query);
+        if(usuario) {
+                if(usuario.pass == req.body.pass) {
+                        res.status(200).json({
+                           ok: true,
+                           //token: jwt.sign({ user: req.body }, 'secret')
+                           "Estado" : "Usuario creado satisfactoriamente",
+                           "Nombre" : req.body.name,
+                           "Email" : req.body.email,
+                           "Contraseña" : req.body.pass
+                        });
+                }
+                else {
+                        res.json({ ok: false, password: req.body.password });
+                }
+        }
+        else {
+                res.json({ ok: false, error: 'No token provided.' });
+        }
 });
 
 
@@ -44,9 +72,9 @@ app.get('/user/:id', (req, res) => {
     }
 });
 
-app.get('/eventos', (req, res) => {
-    //INSERTE FIND/FINDONE MONGODB  
-
+app.get('/eventos', async (req, res) => {
+  const query = { email: req.body.email };
+  const usuario = await users.findOne(query);
     let token = req.query.token || req.headers['authorization'];
     if (token) {
         jwt.verify(token, 'secret',
@@ -54,8 +82,8 @@ app.get('/eventos', (req, res) => {
                 if (err) {
                     res.json({ ok: false, error: err });
                 } else {
-                    res.json({ 
-                      ok: true, 
+                    res.json({
+                      ok: true,
                       "Estado" : "Usuario creado satisfactoriamente",
                       "Nombre" : cliente.name,
                       "Apellido" : cliente.lastname,
@@ -78,8 +106,8 @@ app.get('/eventos/:id', (req, res) => {
                     res.json({ ok: false, error: err });
                 } else {
                     let event = events.find(e => e.id == req.params.id);
-                    res.json({ 
-                      ok: true, 
+                    res.json({
+                      ok: true,
                     "Estado" : "Usuario creado satisfactoriamente",
                     "Nombre" : cliente.name,
                     "Apellido" : cliente.lastname,
@@ -101,8 +129,8 @@ app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
         jwt.verify(token, 'secret',
             (err, decoded) => {
                 if (err) {
-                    res.json({ 
-                      ok: false, 
+                    res.json({
+                      ok: false,
                       "Estado" : "Usuario creado satisfactoriamente",
                       "Nombre" : cliente.name,
                       "Apellido" : cliente.lastname,
@@ -113,7 +141,7 @@ app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
                     let asiento = event.asientos.find(a => a.id == req.params.asiento);
                     if (asiento.iduser == req.params.iduser) {
                         asiento.iduser = null;
-                        res.json({ 
+                        res.json({
                           ok: true,
                           "Estado" : "Usuario creado satisfactoriamente",
                           "Nombre" : cliente.name,
@@ -123,66 +151,13 @@ app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
                         res.json({ ok: false, error: 'El asiento no pertenece al usuario' });
                     }
                 }
-            });
+              });
     } else {
         res.json({ ok: false, error: 'No token provided.' });
-    }        
+    } 
 });
 
 
-// ------------------------------------------------------------------------------------------------------------------
-
-// app.get('/', (req, res) => {
-//     console.log("Persona nueva en sistema")
-//     res.send("Bienvenido")
-//   })
-  
-
-// app.post('/register', (req,res)=>{
-//   var cliente = {"name":req.body.name,"lastname":req.body.lastname,"email":req.body.email,"contra":req.body.contra1}
-//   if(req.body.contra2==cliente.contra){
-//     //INSERTE AQUI CONSULTA MONGODB - USUARIO EXISTENTE
-//     var respuesta=false
-//     if(respuesta){
-//       res.status(200).json({
-//         "Estado" : "Usuario creado satisfactoriamente",
-//         "Nombre" : cliente.name,
-//         "Apellido" : cliente.lastname,
-//         "Correo" : cliente.email
-//       })
-//     }else{
-//       res.status(200).json({
-//         "Estado" : "Correo ya registrado"
-//       })
-//     }
-//   }else{
-//     res.status(200).json({
-//       "Estado" : "Contraseñas no coinciden"
-//     })
-//   }
-// })
-
-// app.get('/login/:correo&&:contra',(req,res) =>{
-//   var correo= req.params.email;
-//   var contra = req.params.contra;
-//   //INSERTE FIND/FINDONE MONGODB  
-//   var resultado=false
-//   if(resultado){
-//     req.cookies.email=correo;
-//     //req.cookies.name=usuario.name;
-    
-//     console.log(req.cookies);
-//     res.status(200).json({
-//       "Estado" : "Logeado con exito",
-//       "Correo": req.cookies.email
-//     })
-//   }else{
-//     res.status(200).json({
-//       "Estado" : "El usuario no existe"
-//     })
-//   }
-// })
-
-// app.listen(port, () => {
-//   console.log(`Example app listening on port ${port}`)
-// })
+app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+});
