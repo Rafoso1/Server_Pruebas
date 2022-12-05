@@ -52,20 +52,24 @@ app.post('/login', async (req, res) => {
 
 
 //va a recibir el parametro id
-app.get('/user/:id', (req, res) => {
+app.get('/user/:id', async (req, res) => {
     var id = req.params.id;
-    //res.json(id);
+    res.json(id);
     //recibe un token y retorna los datos del usuario
     //si el token es correcto
 
     let token = req.query.token || req.headers['authorization'];
     if (token) {
-        jwt.verify(token, 'secret',
+        jwt.verify(token, secret,
             (err, decoded) => {
                 if (err) {
                     res.json({ ok: false, error: err });
                 } else {
-                    res.json({ ok: true, user: decoded.user });
+                    res.json({
+                        ok: 'token exitoso, id valido',
+                        //habers: cliente       
+                        //user: decoded.user
+                    });
                 }
             });
     } else {
@@ -78,7 +82,7 @@ app.get('/eventos', async (req, res) => {
   const usuario = await users.findOne(query);
     let token = req.query.token || req.headers['authorization'];
     if (token) {
-        jwt.verify(token, 'secret',
+        jwt.verify(token, secret,
             (err, decoded) => {
                 if (err) {
                     res.json({ ok: false, error: err });
@@ -88,13 +92,14 @@ app.get('/eventos', async (req, res) => {
                       "Estado" : "Usuario creado satisfactoriamente",
                       "Nombre" : cliente.name,
                       "Apellido" : cliente.lastname,
-                      "Correo" : cliente.email });
+                      "Correo" : req.body.email });
                 }
             });
     } else {
         res.json({ ok: false, error: 'No token provided.' });
     }
 });
+
 
 app.get('/eventos/:id', (req, res) => {
     var id = req.params.id;
