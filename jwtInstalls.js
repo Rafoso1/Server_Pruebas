@@ -1,3 +1,9 @@
+ _id: ObjectId("637d46d6b18e8db2de4a7b2c"),
+    email: 'seba@hola.com',
+    pass: 'seba',
+    name: 'seba'
+
+
 function generateAccessToken(username) {
   return jwt.sign(username, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
 }
