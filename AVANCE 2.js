@@ -1,4 +1,5 @@
-// https://www.npmjs.com/package/uuid-token-generator
+/ https://www.npmjs.com/package/uuid-token-generator
+// { _id: 1, email: 'avance@mail.com', name: 'seba', pass: 'contra' }
 const express = require('express')
 const app = express()
 const port = 3000
@@ -14,281 +15,150 @@ const uri = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTim
 const client = new MongoClient(uri);
 const database = client.db('ticketera');
 const users = database.collection('users');// users tiene: name, pass, email, utilizada para el register y el login
+const cuadricula = database.collection('cuadricula');
 
 const TokenGenerator = require('uuid-token-generator');
 const tokgen = new TokenGenerator(256, TokenGenerator.BASE62);
-var token = tokgen.generate();
+var secret = tokgen.generate();
+const jwt = require('jsonwebtoken');
+var token = '';
+
 
 // aqui estan las rutas de la api rest que se van a usar en el front end 
-
+function generateAccessToken(username) {
+  return jwt.sign(username, secret, { expiresIn: '1800s' });
+}
 
 app.get('/', (req, res) => {
-        console.log("Persona nueva en sistema");
-        res.send("Bienvenido");
-})
-
-app.post('/login', async (req, res) => {
-  const query = { email: req.body.email };
-  const usuario = await users.findOne(query);
-        if(usuario) {
-                if(usuario.pass == req.body.pass) {
-                        res.status(200).json({
-                           ok: true,
-                           //token: jwt.sign({ user: req.body }, 'secret')
-                           "Estado" : "Usuario creado satisfactoriamente",
-                           "Nombre" : req.body.name,
-                           "Email" : req.body.email,
-                           "Contraseña" : req.body.pass
-                        });
-                }
-                else {
-                        res.json({ ok: false, password: req.body.password });
-                }
-        }
-        else {
-                res.json({ ok: false, error: 'No token provided.' });
-        }
-});
-
+ 33         console.log("Persona nueva en sistema");
+ 34         res.json({token: token});
+ 35 })
+ 36 
+ 37 app.post('/login', async (req, res) => {
+ 38   const query = { email: req.body.email };
+ 39   const usuario = await users.findOne(query);
+ 40         if(usuario) {
+ 41                 if(usuario.pass == req.body.pass) {
+ 42                         res.status(200).json({
+ 43                            ok: true,
+ 44                            token: generateAccessToken(usuario)
+ 45                         });
+ 46                 }
+ 47                 else {
+ 48                         res.json({ ok: false, password: req.body.password });
+ 49                 }
+ 50         }
+ 51         else {
+ 52                 res.json({ ok: false, error: 'No existe el email.' });
+ 53         }
+ 54 });
 
 //va a recibir el parametro id
-app.get('/user/:id', async (req, res) => {
-    var id = req.params.id;
-    var name = users.find({_id: "1"});
-    //res.json(id);
-    //recibe un token y retorna los datos del usuario
-    //si el token es correcto
-
-    let token = req.query.token || req.headers['authorization'];
-    if (token) {
-        jwt.verify(token, secret,
-            (err, decoded) => {
-                if (err) {
-                    res.json({ ok: false, error: err });
-                } else {
-                    res.json({ 
-                        ok: 'token exitoso, id valido',
-                        "name": name
-                    });
-                }
-            });
-    } else {
-        res.json({ ok: false, error: 'No token provided.' });
-    }
-});
+ 57 app.get('/user/:id', async (req, res) => {
+ 58     var ide = req.params.id;
+ 59     var name = await users.find({_id: ide}).toArray();
+ 60     //recibe un token y retorna los datos del usuario
+ 61     //si el token es correcto
+ 62 
+ 63     let token = req.query.token || req.headers['authorization'];
+ 64     if (token) {
+ 65         jwt.verify(token, secret,
+ 66             (err, decoded) => {
+ 67                 if (err) {
+ 68                     res.json({ ok: false, error: err });
+ 69                 } else {
+ 70                     res.json({
+ 71                         ok: 'token exitoso, id valido',
+ 72                         "name": name
+ 73                     });
+ 74                 }
+ 75             });
+ 76     } else {
+ 77         res.json({ ok: false, error: 'No token provided.' });
+ 78     }
+ 79 });
 
 app.get('/eventos', async (req, res) => {
-  const query = { email: req.body.email };
-  const usuario = await users.findOne(query);
-    let token = req.query.token || req.headers['authorization'];
-    if (token) {
-        jwt.verify(token, secret,
-            (err, decoded) => {
-                if (err) {
-                    res.json({ ok: false, error: err });
-                } else {
-                    res.json({
-                      ok: true,
-                      "Estado" : "Usuario creado satisfactoriamente",
-                      "Nombre" : cliente.name,
-                      "Apellido" : cliente.lastname,
-                      "Correo" : cliente.email });
-                }
-            });
-    } else {
-        res.json({ ok: false, error: 'No token provided.' });
-    }
-});
-
+ 82   const query = { email: req.body.email };
+ 83   const eventos = await cuadricula.findOne(query);
+ 84     let token = req.query.token || req.headers['authorization'];
+ 85     if (token) {
+ 86         jwt.verify(token, secret,
+ 87             (err, decoded) => {
+ 88                 if (err) {
+ 89                     res.json({ ok: false, error: err });
+ 90                 } else {
+ 91                     res.json({
+ 92                       ok: true,
+ 93                       "Estado" : "Usuario creado satisfactoriamente",
+ 94                     });
+ 95                 }
+ 96             });
+ 97     } else {
+ 98         res.json({ ok: false, error: 'No token provided.' });
+ 99     }
+100 });
 
 app.get('/eventos/:id', (req, res) => {
-    var id = req.params.id;
-    //INSERTE FIND/FINDONE MONGODB 
-
-    let token = req.query.token || req.headers['authorization'];
-    if (token) {
-        jwt.verify(token, 'secret',
-            (err, decoded) => {
-                if (err) {
-                    res.json({ ok: false, error: err });
-                } else {
-                    let event = events.find(e => e.id == req.params.id);
-                    res.json({
-                      ok: true,
-                    "Estado" : "Usuario creado satisfactoriamente",
-                    "Nombre" : cliente.name,
-                    "Apellido" : cliente.lastname,
-                    "Correo" : cliente.email });
-                }
-            });
-    } else {
-        res.json({ ok: false, error: 'No token provided.' });
-    }
-});
+103     var id = req.params.id;
+104     //INSERTE FIND/FINDONE MONGODB 
+105 
+106     let token = req.query.token || req.headers['authorization'];
+107     if (token) {
+108         jwt.verify(token, 'secret',
+109             (err, decoded) => {
+110                 if (err) {
+111                     res.json({ ok: false, error: err });
+112                 } else {
+113                     let event = events.find(e => e.id == req.params.id);
+114                     res.json({
+115                       ok: true,
+116                     "Estado" : "Usuario creado satisfactoriamente",
+117                     "Nombre" : cliente.name,
+118                     "Apellido" : cliente.lastname,
+119                     "Correo" : cliente.email });
+120                 }
+121             });
+122     } else {
+123         res.json({ ok: false, error: 'No token provided.' });
+124     }
+125 });
 
 app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
-    var id = req.params.id;
-    var asiento = req.params.asiento;
-    var iduser = req.params.iduser;
-    //INSERTE FIND/FINDONE MONGODB  
-    let token = req.query.token || req.headers['authorization'];
-    if (token) {
-        jwt.verify(token, 'secret',
-            (err, decoded) => {
-                if (err) {
-                    res.json({
-                      ok: false,
-                      "Estado" : "Usuario creado satisfactoriamente",
-                      "Nombre" : cliente.name,
-                      "Apellido" : cliente.lastname,
-                      "Correo" : cliente.email
-                    });
-                } else {
-                    let event = events.find(e => e.id == req.params.id);
-                    let asiento = event.asientos.find(a => a.id == req.params.asiento);
-                    if (asiento.iduser == req.params.iduser) {
-                        asiento.iduser = null;
-                        res.json({
-                          ok: true,
-                          "Estado" : "Usuario creado satisfactoriamente",
-                          "Nombre" : cliente.name,
-                          "Apellido" : cliente.lastname,
-                          "Correo" : cliente.email });
-                    } else {
-                        res.json({ ok: false, error: 'El asiento no pertenece al usuario' });
-                    }
-                }
-              });
-    } else {
-        res.json({ ok: false, error: 'No token provided.' });
-    } 
-});
-//---------------------------------------------------------------------------------------------------
-// app.get('/login/:correo&&:contra',(req,res) =>{
-//     var correo= req.params.email;
-//     var contra = req.params.contra;
-//     //INSERTE FIND/FINDONE MONGODB  
-//     var resultado=false
-//     if(resultado){
-//       req.cookies.email=correo;
-//       //req.cookies.name=usuario.name;
-      
-//       console.log(req.cookies);
-//       res.status(200).json({
-//         "Estado" : "Logeado con exito",
-//         "Correo": req.cookies.email
-//       })
-//     }else{
-//       res.status(200).json({
-//         "Estado" : "El usuario no existe"
-//       })
-//     }
-//   })
-// ---------------------------------------------------------------------------------------------------
-// app.get("/API/eventos", async (req, res) => {
-// 	try {
-// 		const collection = database.collection("eventos");
-// 		collection.find({}).toArray(function (err, result) {
-// 			if (err) {
-// 				console.log(err);
-// 			} else {
-// 				console.log("Query exitosa a la db, eventos enviados");
-// 				res.json({
-// 					eventos: result,
-// 				});
-// 				return;
-// 			}
-// 		});
+128     var id = req.params.id;
+129     var asiento = req.params.asiento;
+130     var iduser = req.params.iduser;
+131     //INSERTE FIND/FINDONE MONGODB  
+132     let token = req.query.token || req.headers['authorization'];
+133     if (token) {
+134         jwt.verify(token, 'secret',
+135             (err, decoded) => {
+136                 if (err) {
+137                     res.json({
+138                       ok: false,
+139                       "Estado" : "Usuario creado satisfactoriamente",
+140                       "Nombre" : cliente.name,
+141                       "Apellido" : cliente.lastname,
+142                       "Correo" : cliente.email
+143                     });
+144                 } else {
+145                     let event = events.find(e => e.id == req.params.id);
+146                     let asiento = event.asientos.find(a => a.id == req.params.asiento);
+147                     if (asiento.iduser == req.params.iduser) {
+148                         asiento.iduser = null;
+149                         res.json({
+150                           ok: true,
+151                           "Estado" : "Usuario creado satisfactoriamente",
+152                           "Nombre" : cliente.name,
+153                           "Apellido" : cliente.lastname,
+154                           "Correo" : cliente.email });
+155                     } else {
+156                         res.json({ ok: false, error: 'El asiento no pertenece al usuario' });
+157                     }
+158                 }
+159               });
+160     } else {
+161         res.json({ ok: false, error: 'No token provided.' });
+162     }
+163 });
 
-// 		//res.send(usuario);
-// 	} finally {
-// 		// Ensures that the client will close when you finish/error
-// 		//await client.close();
-// 		console.log("Error en la query");
-// 	}
-// });
-
-// function loginByToken(req) {
-// 	const token = req.headers.authorization;
-// 	if (!token) return null;
-// 	const decoded = jwt.verify(token, SECRET_JWT_KEY);
-// 	return decoded;
-// }
-
-// app.post("/API/login", (req, res) => {
-// 	if (loginByToken(req)) {
-// 		res.status(200).json({
-// 			message: "Login con token exitoso!",
-// 		});
-// 		return;
-// 	}
-// 	//Ejemplo de token para Frez
-// 	// https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiRnJleiIsIm5hbWUiOiJtaW5lY3JhZnQifQ.NfI48yK1xd3LAQJz07tDRSIjmdFX3v4_UZPbM9Ys9Io
-
-// 	//Recibe datos desde el cliente
-// 	const request = JSON.parse(JSON.stringify(req.body));
-
-// 	//verifico que request.user y request.password no esten vacios
-// 	if (request.user && request.password) {
-// 		const user = request.user;
-// 		const password = request.password;
-
-// 		//consulto a la db si existe el usuario
-// 		const collection = database.collection("usuarios");
-// 		collection.find({ usuario: user }).toArray(function (err, result) {
-// 			if (err) {
-// 				console.log(err);
-// 			} else {
-// 				//si existe el usuario, verifico que la password sea correcta
-// 				if (result[0].password == password) {
-// 					//creo el token
-// 					const token = jwt.sign(
-// 						{ user: user, id: result[0]._id },
-// 						SECRET_JWT_KEY,
-// 						{ expiresIn: "1h" }
-// 					);
-// 					res.status(200).json({
-// 						token: token,
-// 					});
-// 					return;
-// 				} else {
-// 					res.json({
-// 						message: "Contraseña incorrecta",
-// 					});
-// 					return;
-// 				}
-// 			}
-// 		});
-// 	} else {
-// 		res.status(400).json({
-// 			message: "Datos incompletos",
-// 		});
-// 		return;
-// 	}
-// });
-
-// //Recibe un id de usuarioy retorna los datos del usuario
-// app.post("/API/user/:id", (req, res) => {
-// 	if (!loginByToken(req)) {
-// 		res.status(401).json({
-// 			message: "Token invalido",
-// 		});
-// 		return;
-// 	}
-// 	const id = req.params.id;
-// 	const collection = database.collection("usuarios");
-// 	collection.find({ _id: ObjectID(id) }).toArray(function (err, result) {
-// 		if (err) {
-// 			console.log(err);
-// 		} else {
-// 			res.json({
-// 				usuario: result[0],
-// 			});
-// 			return;
-// 		}
-// 	});
-// });
-
-app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-});
