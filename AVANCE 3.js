@@ -55,8 +55,9 @@ app.post('/login', async (req, res) => {
 
 //va a recibir el parametro id
 app.get('/user/:id', async (req, res) => {
-    var ide = req.params.id;
-    var name = await users.find({_id: ide}).toArray();
+    const query = { _id: parseInt(req.params.id) };
+    const user = await users.findOne(query);
+        console.log(user);
     //recibe un token y retorna los datos del usuario
     //si el token es correcto
 
@@ -69,7 +70,7 @@ app.get('/user/:id', async (req, res) => {
                 } else {
                     res.json({
                         ok: 'token exitoso, id valido',
-                        "name": name
+                        user: user
                     });
                 }
             });
@@ -77,6 +78,7 @@ app.get('/user/:id', async (req, res) => {
         res.json({ ok: false, error: 'No token provided.' });
     }
 });
+
 
 app.get('/eventos', async (req, res) => {
   const query = { email: req.body.email };
