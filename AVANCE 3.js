@@ -1,4 +1,4 @@
-// 636dd4346283405d0da617ec
+// ObjectId("636dd4346283405d0da617ec")
 // https://www.npmjs.com/package/uuid-token-generator
 // { _id: 1, email: 'avance@mail.com', name: 'seba', pass: 'contra' }
 const express = require('express')
