@@ -1,4 +1,4 @@
-/ https://www.npmjs.com/package/uuid-token-generator
+// https://www.npmjs.com/package/uuid-token-generator
 // usuario: { _id: 1, email: 'avance@mail.com', name: 'seba', pass: 'contra' }
 // evento: ({_id: '1', name: 'Backyardigans', dia: 30, hora: '13:00', link: 'https://imagenes.atresplayer.com/atp/clipping/cmsimages02/2021/03/10/D2269CAE-4705-4D3A-BC8D-0E66AD9A53B3/1280x720.jpg'})
 // ultimo punto: id (evento): '1', asiento: '1', iduser: 1
