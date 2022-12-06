@@ -1,6 +1,7 @@
-// ObjectId("636dd4346283405d0da617ec")
-// https://www.npmjs.com/package/uuid-token-generator
-// { _id: 1, email: 'avance@mail.com', name: 'seba', pass: 'contra' }
+/ https://www.npmjs.com/package/uuid-token-generator
+// usuario: { _id: 1, email: 'avance@mail.com', name: 'seba', pass: 'contra' }
+// evento: ({_id: '1', name: 'Backyardigans', dia: 30, hora: '13:00', link: 'https://imagenes.atresplayer.com/atp/clipping/cmsimages02/2021/03/10/D2269CAE-4705-4D3A-BC8D-0E66AD9A53B3/1280x720.jpg'})
+// ultimo punto: id (evento): '1', asiento: '1', iduser: 1
 const express = require('express')
 const app = express()
 const port = 3000
@@ -17,12 +18,15 @@ const client = new MongoClient(uri);
 const database = client.db('ticketera');
 const users = database.collection('users');// users tiene: name, pass, email, utilizada para el register y el login
 const cuadricula = database.collection('cuadricula');
+const disponibles = database.collection('disponibles');
+
 
 const TokenGenerator = require('uuid-token-generator');
 const tokgen = new TokenGenerator(256, TokenGenerator.BASE62);
 var secret = tokgen.generate();
 const jwt = require('jsonwebtoken');
 var token = '';
+var ObjectId = require('mongodb').ObjectId;
 
 
 // aqui estan las rutas de la api rest que se van a usar en el front end 
@@ -80,10 +84,32 @@ app.get('/user/:id', async (req, res) => {
     }
 });
 
-
 app.get('/eventos', async (req, res) => {
-  const query = { email: req.body.email };
-  const eventos = await cuadricula.findOne(query);
+  const peliculas = await cuadricula.find({});
+        console.log(peliculas);
+    let token = req.query.token || req.headers['authorization'];
+    if (token) {
+        jwt.verify(token, secret,
+            (err, decoded) => {
+                if (err) {
+                    res.json({ ok: false, error: err });
+                } else {
+                    res.json({
+                      ok: 'token valido',
+                      peliculas: peliculas
+                    });
+                }
+            });
+    } else {
+        res.json({ ok: false, error: 'Token no valido.' });
+    }
+});
+
+app.get('/eventos/:id', async (req, res) => {
+    const query = { _id: req.params.id };
+    const evento = await cuadricula.findOne(query);
+        console.log(query);
+        console.log(evento);
     let token = req.query.token || req.headers['authorization'];
     if (token) {
         jwt.verify(token, secret,
@@ -93,7 +119,7 @@ app.get('/eventos', async (req, res) => {
                 } else {
                     res.json({
                       ok: true,
-                      "Estado" : "Usuario creado satisfactoriamente",
+                      evento: evento
                     });
                 }
             });
@@ -102,68 +128,37 @@ app.get('/eventos', async (req, res) => {
     }
 });
 
-app.get('/eventos/:id', (req, res) => {
-    var id = req.params.id;
-    //INSERTE FIND/FINDONE MONGODB 
+app.post('/eventos/comprar/:id/:asiento/:iduser', async (req, res) => {
+    const id_evento ={ _id: req.params.id };
+    const id_asiento ={ seat: req.params.asiento };
+    const id_user = {_id: req.params.iduser };
+
+    const usuario = await users.findOne(id_user);
+    const evento = await cuadricula.findOne(id_evento);
+    const asiento = await disponibles.findOne(id_asiento);
 
     let token = req.query.token || req.headers['authorization'];
     if (token) {
-        jwt.verify(token, 'secret',
-            (err, decoded) => {
-                if (err) {
-                    res.json({ ok: false, error: err });
-                } else {
-                    let event = events.find(e => e.id == req.params.id);
-                    res.json({
-                      ok: true,
-                    "Estado" : "Usuario creado satisfactoriamente",
-                    "Nombre" : cliente.name,
-                    "Apellido" : cliente.lastname,
-                    "Correo" : cliente.email });
-                }
-            });
-    } else {
-        res.json({ ok: false, error: 'No token provided.' });
-    }
-});
-
-app.post('/eventos/comprar/:id/:asiento/:iduser', (req, res) => {
-    var id = req.params.id;
-    var asiento = req.params.asiento;
-    var iduser = req.params.iduser;
-    //INSERTE FIND/FINDONE MONGODB  
-    let token = req.query.token || req.headers['authorization'];
-    if (token) {
-        jwt.verify(token, 'secret',
+        jwt.verify(token, secret,
             (err, decoded) => {
                 if (err) {
                     res.json({
                       ok: false,
-                      "Estado" : "Usuario creado satisfactoriamente",
-                      "Nombre" : cliente.name,
-                      "Apellido" : cliente.lastname,
-                      "Correo" : cliente.email
                     });
                 } else {
-                    let event = events.find(e => e.id == req.params.id);
-                    let asiento = event.asientos.find(a => a.id == req.params.asiento);
-                    if (asiento.iduser == req.params.iduser) {
-                        asiento.iduser = null;
                         res.json({
                           ok: true,
-                          "Estado" : "Usuario creado satisfactoriamente",
-                          "Nombre" : cliente.name,
-                          "Apellido" : cliente.lastname,
-                          "Correo" : cliente.email });
-                    } else {
-                        res.json({ ok: false, error: 'El asiento no pertenece al usuario' });
-                    }
+                          usuario: usuario,
+                          'asiento': req.params.asiento
+                        });
+
                 }
               });
     } else {
-        res.json({ ok: false, error: 'No token provided.' });
+        res.json({ ok: false, error: 'Token No valido' });
     }
 });
+
 app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
 });
